@@ -1,7 +1,10 @@
 #!/bin/sh
 set -e
 
-git submodule update --init --recursive
+git submodule update --init
+cd pico-sdk
+git submodule update --init
+cd ..
 
 mkdir -p build
 cd build
