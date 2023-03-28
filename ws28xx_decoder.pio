@@ -1,3 +1,6 @@
+
+.define PUBLIC WS28XX_DECODER_INPUT_PIN 0
+
 .program ws28xx_decoder
 
 ; EXECCTRL_JMP_PIN = 0
@@ -8,9 +11,9 @@ main_loop:
 
 	; detect zero or one
 byte_loop:
-	wait 1 pin 0 [5] ; wait for high and delay 500ns
+	wait 1 pin WS28XX_DECODER_INPUT_PIN [5] ; wait for high and delay 500ns
 	in pins, 1 ; get one bit
-	wait 0 pin 0 ; wait for low
+	wait 0 pin WS28XX_DECODER_INPUT_PIN ; wait for low
 
 	; run reset detect loop twice so we get to 6000ns
 	set x, 29
@@ -33,3 +36,53 @@ byte_loop_tail:
 	jmp y-- byte_loop
 	push
 	jmp main_loop
+
+% c-sdk {
+
+#include "hardware/irq.h"
+#include "hardware/pio.h"
+#include "hardware/clocks.h"
+
+#define WS28XX_TIME_BASE 10000000.0f
+
+#define WS28XX_PIO pio0
+#define WS28XX_PIO_SM 0
+#define WS28XX_PIO_IRQ PIO0_IRQ_0
+#define WS28XX_PIO_IRQ_INDEX 0
+#define WS28XX_PIO_IRQ_SOURCE pis_interrupt0
+
+void ws28xxx_decoder_isr();
+
+static inline void ws28xx_decoder_program_init(PIO pio, uint sm, uint offset) {
+    pio_sm_set_consecutive_pindirs(pio, sm, WS28XX_DECODER_INPUT_PIN, 1, false);
+    pio_gpio_init(pio, WS28XX_DECODER_INPUT_PIN);
+    gpio_disable_pulls(WS28XX_DECODER_INPUT_PIN);
+
+    pio_sm_config sm_config = ws28xx_decoder_program_get_default_config(offset);
+    sm_config_set_in_pins(&sm_config, WS28XX_DECODER_INPUT_PIN); // PINCTRL_IN_BASE
+    sm_config_set_jmp_pin(&sm_config, WS28XX_DECODER_INPUT_PIN); // EXECCTRL_JMP_PIN
+
+    sm_config_set_in_shift(&sm_config, true, false, 32);
+    sm_config_set_fifo_join(&sm_config, PIO_FIFO_JOIN_RX);
+
+    float div = (float)clock_get_hz(clk_sys) / WS28XX_TIME_BASE; // 100ns per instruction
+    sm_config_set_clkdiv(&sm_config, div);
+
+    irq_set_enabled(WS28XX_PIO_IRQ, true);
+	pio_set_irqn_source_enabled(pio, WS28XX_PIO_IRQ_INDEX, WS28XX_PIO_IRQ_SOURCE, true);
+    pio_interrupt_clear(pio, sm);
+
+    pio_sm_init(pio, sm, offset, &sm_config);
+    pio_sm_set_enabled(pio, sm, true);
+}
+
+static inline void ws28xx_decoder_init() {
+    ws28xx_decoder_program_init(WS28XX_PIO, WS28XX_PIO_SM, pio_add_program(pio0, &ws28xx_decoder_program));
+    irq_set_exclusive_handler(WS28XX_PIO_IRQ, ws28xxx_decoder_isr);
+}
+
+static inline uint32_t ws28xx_get_value() {
+	return WS28XX_PIO->rxf[WS28XX_PIO_SM];
+}
+
+%}
