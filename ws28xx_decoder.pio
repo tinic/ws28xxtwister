@@ -1,0 +1,35 @@
+.program ws28xx_decoder
+
+; EXECCTRL_JMP_PIN = 0
+; PINCTRL_IN_BASE = 0
+
+main_loop:
+	set y, 7
+
+	; detect zero or one
+byte_loop:
+	wait 1 pin 0 [5] ; wait for high and delay 500ns
+	in pins, 1 ; get one bit
+	wait 0 pin 0 ; wait for low
+
+	; run reset detect loop twice so we get to 6000ns
+	set x, 29
+reset_detect_loop_1:
+	jmp pin byte_loop_tail
+	jmp x-- reset_detect_loop_1
+
+	set x, 29
+reset_detect_loop_2:
+	jmp pin byte_loop_tail
+	jmp x-- reset_detect_loop_2
+	
+	; reset occurred, push out 0xfffffffff
+	mov isr, !null
+	push
+	jmp main_loop
+
+	; push out byte when ready
+byte_loop_tail:
+	jmp y-- byte_loop
+	push
+	jmp main_loop
