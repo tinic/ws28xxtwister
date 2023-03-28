@@ -57,6 +57,7 @@ set(CXX_FLAGS
 pico_sdk_init()
 
 add_executable(${PROJECT_NAME}
+    led_data_processor.cpp
     ws28xx_decoder.cpp
     main.cpp
 )
