@@ -2,8 +2,9 @@
 #include <pico/stdlib.h>
 #include <pico/stdio_uart.h>
 
+#include "ws28xx_output.h"
+#include "led_data_processor.h"
 #include "ws28xx_decoder.h"
-#include "ws28xx_decoder.pio.h"
 
 int main() {
     stdout_uart_init();
@@ -11,6 +12,8 @@ int main() {
 
     set_sys_clock_khz(200000, true);
 
+    WS28xxOutput ::instance();
+    LedDataProcessor::instance();
     WS28xxDecoder::instance();
 
     return 0;

@@ -6,9 +6,9 @@
 
 void ws28xxx_decoder_isr() {
     if (pio_interrupt_get(WS28XX_DECODER_PIO, WS28XX_DECODER_PIO_IRQ_INDEX)) {
-	    pio_interrupt_clear(WS28XX_DECODER_PIO, WS28XX_DECODER_PIO_IRQ_INDEX);
+        pio_interrupt_clear(WS28XX_DECODER_PIO, WS28XX_DECODER_PIO_IRQ_INDEX);
         LedDataProcessor::instance().process(ws28xx_decoder_get_value());
-	}
+    }
 }
 
 WS28xxDecoder  &WS28xxDecoder ::instance() {
