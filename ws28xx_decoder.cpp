@@ -4,15 +4,16 @@
 #include "ws28xx_decoder.pio.h"
 #include "led_data_processor.h"
 
+static WS28xxDecoder ws28xxDecoder;
+
 void ws28xxx_decoder_isr() {
     if (pio_interrupt_get(WS28XX_DECODER_PIO, WS28XX_DECODER_PIO_IRQ_INDEX)) {
         pio_interrupt_clear(WS28XX_DECODER_PIO, WS28XX_DECODER_PIO_IRQ_INDEX);
-        WS28xxDecoder::instance().process(ws28xx_decoder_get_value());
+        ws28xxDecoder.process(ws28xx_decoder_get_value());
     }
 }
 
-WS28xxDecoder  &WS28xxDecoder::instance() {
-    static WS28xxDecoder ws28xxDecoder;
+WS28xxDecoder &WS28xxDecoder::instance() {
     if (!ws28xxDecoder.initialized) {
         ws28xxDecoder.initialized = true;
         ws28xxDecoder.init();
