@@ -4,9 +4,6 @@
 .define public EXECCTRL_JMP_PIN 0
 .define public PINCTRL_IN_BASE 0
 
-main_loop:
-	set y, 7
-
 	; detect zero or one
 byte_loop:
 	wait 1 pin INPUT_PIN [5] ; wait for high and delay 500ns
@@ -14,26 +11,25 @@ byte_loop:
 	wait 0 pin INPUT_PIN ; wait for low
 
 	; run reset detect loop twice so we get to 6000ns
-	set x, 29
+	set y, 29
 reset_detect_loop_1:
 	jmp pin byte_loop_tail
-	jmp x-- reset_detect_loop_1
+	jmp y-- reset_detect_loop_1
 
-	set x, 29
+	set y, 29
 reset_detect_loop_2:
 	jmp pin byte_loop_tail
-	jmp x-- reset_detect_loop_2
+	jmp y-- reset_detect_loop_2
 	
 	; reset occurred, push out 0xfffffffff
 	mov isr, !null
-	push
-	jmp main_loop
+	jmp done
 
 	; push out byte when ready
 byte_loop_tail:
-	jmp y-- byte_loop
+	jmp x-- byte_loop
+done: 
 	push
-	jmp main_loop
 
 % c-sdk {
 
@@ -51,12 +47,12 @@ byte_loop_tail:
 
 void ws28xxx_decoder_isr();
 
-static inline void ws28xx_decoder_program_init(PIO pio, uint sm, uint offset) {
+static inline void ws28xx_decoder_program_init(PIO pio, uint sm, uint bits) {
     pio_sm_set_consecutive_pindirs(pio, sm, ws28xx_decoder_INPUT_PIN, 1, false);
     pio_gpio_init(pio, ws28xx_decoder_INPUT_PIN);
     gpio_disable_pulls(ws28xx_decoder_INPUT_PIN);
 
-    pio_sm_config sm_config = ws28xx_decoder_program_get_default_config(offset);
+    pio_sm_config sm_config = ws28xx_decoder_program_get_default_config(0);
     sm_config_set_in_pins(&sm_config, ws28xx_decoder_PINCTRL_IN_BASE);
     sm_config_set_jmp_pin(&sm_config, ws28xx_decoder_EXECCTRL_JMP_PIN);
 
@@ -70,12 +66,14 @@ static inline void ws28xx_decoder_program_init(PIO pio, uint sm, uint offset) {
 	pio_set_irqn_source_enabled(pio, WS28XX_DECODER_PIO_IRQ_INDEX, WS28XX_DECODER_PIO_IRQ_SOURCE, true);
     pio_interrupt_clear(pio, sm);
 
-    pio_sm_init(pio, sm, offset, &sm_config);
+	pio_sm_exec(pio, sm, pio_encode_set(pio_x, bits-1));
+    pio_sm_init(pio, sm, 0, &sm_config);
     pio_sm_set_enabled(pio, sm, true);
 }
 
 static inline void ws28xx_decoder_init() {
-    ws28xx_decoder_program_init(WS28XX_DECODER_PIO, WS28XX_DECODER_PIO_SM, pio_add_program(WS28XX_DECODER_PIO, &ws28xx_decoder_program));
+	pio_add_program_at_offset(WS28XX_DECODER_PIO, &ws28xx_decoder_program, 0);
+    ws28xx_decoder_program_init(WS28XX_DECODER_PIO, WS28XX_DECODER_PIO_SM, 8);
     irq_set_exclusive_handler(WS28XX_DECODER_PIO_IRQ, ws28xxx_decoder_isr);
 }
 

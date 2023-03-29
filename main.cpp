@@ -12,8 +12,6 @@ int main() {
 
     set_sys_clock_khz(200000, true);
 
-    WS28xxOutput ::instance();
-    LedDataProcessor::instance();
     WS28xxDecoder::instance();
 
     return 0;

@@ -23,26 +23,27 @@ do_zero:
 #define WS28XX_OUTPUT_PIO pio1
 #define WS28XX_OUTPUT_PIO_SM 0
 
-static inline void ws2812_output_program_init(PIO pio, uint sm, uint offset, uint pin, float freq) {
+static inline void ws2812_output_program_init(PIO pio, uint sm, uint pin, float freq, uint bits) {
 
     pio_gpio_init(pio, pin);
     pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
 
-    pio_sm_config c = ws2812_output_program_get_default_config(offset);
+    pio_sm_config c = ws2812_output_program_get_default_config(0);
     sm_config_set_sideset_pins(&c, pin);
-    sm_config_set_out_shift(&c, false, true, 8);
+    sm_config_set_out_shift(&c, false, true, bits);
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
 
     int cycles_per_bit = ws2812_output_T1 + ws2812_output_T2 + ws2812_output_T3;
     float div = float(clock_get_hz(clk_sys)) / (freq * float(cycles_per_bit));
     sm_config_set_clkdiv(&c, div);
 
-    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_init(pio, sm, 0, &c);
     pio_sm_set_enabled(pio, sm, true);
 }
 
-static inline void ws28xx_output_init() {
-    ws2812_output_program_init(WS28XX_OUTPUT_PIO, WS28XX_OUTPUT_PIO_SM, pio_add_program(WS28XX_OUTPUT_PIO, &ws2812_output_program), ws2812_output_OUTPUT_PIN, 800000);
+static inline void ws28xx_output_init(uint bits) {
+    pio_add_program_at_offset(WS28XX_OUTPUT_PIO, &ws2812_output_program, 0);
+    ws2812_output_program_init(WS28XX_OUTPUT_PIO, WS28XX_OUTPUT_PIO_SM, ws2812_output_OUTPUT_PIN, 800000, bits);
 }
 
 %}
