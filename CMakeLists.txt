@@ -71,8 +71,11 @@ add_executable(${PROJECT_NAME}
 )
 
 pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/ws28xx_decoder.pio)
+pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/ws28xx_output.pio)
 
 target_link_libraries(${PROJECT_NAME} pico_stdlib hardware_pio)
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE PICO_DEFAULT_UART_TX_PIN=12)
 
 target_compile_options(${PROJECT_NAME} PRIVATE ${CC_FLAGS})
 target_compile_options(${PROJECT_NAME} PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CXX_FLAGS}>")

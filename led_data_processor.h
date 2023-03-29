@@ -1,15 +1,28 @@
 #ifndef _LED_DATA_PROCESSOR_H_
 #define _LED_DATA_PROCESSOR_H_
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <cstdint>
+#include <cstdlib>
+#include <array>
 
 class LedDataProcessor {
 public:
+    LedDataProcessor():
+        workBuffer(),
+        swizzleSelect() {
+    }
     static LedDataProcessor &instance();
     void process(uint32_t data);
+
+    enum LedDataType {
+        rgb8,
+        rgba8,
+        rgb16,
+        rgba16
+    } ledDataType = rgb8;
+
 private:
-    void clearSwizzleBuffer();
+    static constexpr uint32_t END_OF_DATA = 0xffffffff;
 
     void init();
     bool initialized = false;
@@ -21,6 +34,12 @@ private:
     size_t dataN = 0;
     size_t dataCount = 0;
 
+    // Intermediate work buffer
+    static constexpr size_t workBufferN = 24; // LCM of ledDataType
+    std::array<std::array<uint32_t, workBufferN>, 2> workBuffer;
+    size_t workBufferPage = 0;
+    size_t workBufferIndex = 0;
+
     // Skip pixels
     bool skipActive = false;
     size_t skipBytesN = 0;
@@ -28,11 +47,7 @@ private:
 
     // Swizzle pixels
     bool swizzleActive = false;
-    size_t swizzlePage = 0;
-    size_t swizzleIndex = 0;
-    static constexpr size_t swizzleBufferN = 24;
-    uint32_t swizzleBuffer[2][swizzleBufferN];
-    uint8_t swizzleSelect[swizzleBufferN];
+    std::array<uint32_t, workBufferN> swizzleSelect;
 };
 
 #endif //  #ifndef _LED_DATA_PROCESSOR_H_

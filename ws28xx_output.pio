@@ -1,0 +1,48 @@
+.program ws2812_output
+.side_set 1
+
+.define public OUTPUT_PIN 3
+
+.define public T1 2
+.define public T2 5
+.define public T3 3
+
+.wrap_target
+bitloop:
+    out x, 1       side 0 [T3 - 1] ; Side-set still takes place when instruction stalls
+    jmp !x do_zero side 1 [T1 - 1] ; Branch on the bit we shifted out. Positive pulse
+do_one:
+    jmp  bitloop   side 1 [T2 - 1] ; Continue driving high, for a long pulse
+do_zero:
+    nop            side 0 [T2 - 1] ; Or drive low, for a short pulse
+.wrap
+
+% c-sdk {
+#include "hardware/clocks.h"
+
+#define WS28XX_OUTPUT_PIO pio1
+#define WS28XX_OUTPUT_PIO_SM 0
+
+static inline void ws2812_output_program_init(PIO pio, uint sm, uint offset, uint pin, float freq) {
+
+    pio_gpio_init(pio, pin);
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
+
+    pio_sm_config c = ws2812_output_program_get_default_config(offset);
+    sm_config_set_sideset_pins(&c, pin);
+    sm_config_set_out_shift(&c, false, true, 8);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+
+    int cycles_per_bit = ws2812_output_T1 + ws2812_output_T2 + ws2812_output_T3;
+    float div = float(clock_get_hz(clk_sys)) / (freq * float(cycles_per_bit));
+    sm_config_set_clkdiv(&c, div);
+
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+
+static inline void ws28xx_output_init() {
+    ws2812_output_program_init(WS28XX_OUTPUT_PIO, WS28XX_OUTPUT_PIO_SM, pio_add_program(WS28XX_OUTPUT_PIO, &ws2812_output_program), ws2812_output_OUTPUT_PIN, 800000);
+}
+
+%}
