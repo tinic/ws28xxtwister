@@ -5,9 +5,11 @@
 #include "led_data_processor.h"
 
 static WS28xxDecoder ws28xxDecoder;
+static uint pio_sm_set_x = 0;
 
 void ws28xxx_decoder_isr() {
     if (pio_interrupt_get(WS28XX_DECODER_PIO, WS28XX_DECODER_PIO_IRQ_INDEX)) {
+        pio_sm_exec(WS28XX_DECODER_PIO, WS28XX_DECODER_PIO_SM, pio_sm_set_x);
         pio_interrupt_clear(WS28XX_DECODER_PIO, WS28XX_DECODER_PIO_IRQ_INDEX);
         ws28xxDecoder.process(ws28xx_decoder_get_value());
     }
@@ -33,24 +35,17 @@ void WS28xxDecoder::process(uint32_t data) {
 }
 
 void WS28xxDecoder::rgb8Decode(uint32_t data) {
-    pixel32 <<= 8;
-    pixel32 |= data >> 24;
-    compIdx++;
-    if (compIdx > 3) {
-        ledDataProcessor.processRGB8(pixel32);
-        compIdx = 0;
-        pixel32 = 0;
-    }
+    ledDataProcessor.processRGB8(pixel32>>8);
 }
 
 void WS28xxDecoder::rgba8Decode(uint32_t data) {
-    pixel32 <<= 8;
-    pixel32 |= data >> 24;
+    pixel32 <<= 16;
+    pixel32 |= data >> 16;
     compIdx++;
-    if (compIdx > 4) {
-        ledDataProcessor.processRGBA8(pixel32);
+    if (compIdx > 2) {
+        ledDataProcessor.processRGB16(pixel32);
         compIdx = 0;
-        pixel32 = 0;
+        pixel64 = 0;
     }
 }
 
@@ -86,11 +81,11 @@ void WS28xxDecoder::update() {
     switch (ledDataType) {
         case LEDDataType::rgb8: {
             decoderFunc = &WS28xxDecoder::rgb8Decode;
-            bitsPerComponent = 8;
+            bitsPerComponent = 24;
         } break;
         case LEDDataType::rgba8: {
             decoderFunc = &WS28xxDecoder::rgba8Decode;
-            bitsPerComponent = 8;
+            bitsPerComponent = 16;
         } break;
         case LEDDataType::rgb16: {
             decoderFunc = &WS28xxDecoder::rgb16Decode;
@@ -101,5 +96,6 @@ void WS28xxDecoder::update() {
             bitsPerComponent = 16;
         } break;
     }
-	pio_sm_exec(WS28XX_DECODER_PIO, WS28XX_DECODER_PIO_SM, pio_encode_set(pio_x, bitsPerComponent-1));
+	pio_sm_set_x = pio_encode_set(pio_x, bitsPerComponent-1);
+    pio_sm_exec(WS28XX_DECODER_PIO, WS28XX_DECODER_PIO_SM, pio_sm_set_x);
 }

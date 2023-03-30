@@ -5,6 +5,7 @@
 .define public PINCTRL_IN_BASE 0
 
 	; detect zero or one
+	nop
 byte_loop:
 	wait 1 pin INPUT_PIN [5] ; wait for high and delay 500ns
 	in pins, 1 ; get one bit
