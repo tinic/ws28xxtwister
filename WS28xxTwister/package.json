@@ -20,7 +20,7 @@
     "serve:electron": "set APP_IS_NIGHTLY=yes && set APP_IS_DEV=yes && yarn build && wait-on tcp:3000 && electron .",
     "build:front": "cd WS28xxTwister && yarn build",
     "electron:build": "yarn build",
-    "electron:builder": "electron-builder",
+    "electron:builder": "electron-builder --publish never",
     "app:build": "yarn prod:rename && yarn build:front && yarn electron:build && yarn electron:builder",
     "app:build:nightly": "set APP_IS_NIGHTLY=yes && set APP_IS_DEV=no && yarn nightly:rename && yarn build:front && yarn electron:build && yarn electron:builder",
     "nightly:rename": "json -I -f package.json -e \"this.name='ws28xxtwister'\" && json -I -f package.json -e \"this.build.productName='WS28xxTwister Nightly'\" && json -I -f package.json -e \"this.build.appId='net.tinic.ws28xxtwister.app'\"",
