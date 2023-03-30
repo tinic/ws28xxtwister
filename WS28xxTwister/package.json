@@ -1,24 +1,74 @@
 {
   "name": "ws28xxtwister",
-  "private": true,
-  "version": "0.0.0",
-  "type": "commonjs",
-  "main": "main.js",
-  "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc && vite build",
-    "preview": "vite preview",
-    "electron:start": "electron ."
+  "version": "1.0.0",
+  "description": "Front End App for WS28xxTwister board.",
+  "main": "./dist/main.js",
+  "license": "MIT",
+  "author": "Tinic Uro",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tinic/ws28xxtwister.git"
   },
-  "dependencies": {
-    "vue": "^3.2.47"
+  "scripts": {
+    "build": "tsc",
+    "watch": "nodemon --exec yarn serve:electron",
+    "start": "yarn nightly:rename && concurrently -k \"yarn serve:front\" \"yarn watch\"",
+    "front:setup": "cd WS28xxTwister && yarn",
+    "electron:setup": "yarn",
+    "setup": "yarn front:setup && yarn electron:setup",
+    "serve:front": "cd WS28xxTwister && yarn dev",
+    "serve:electron": "set APP_IS_NIGHTLY=yes && set APP_IS_DEV=yes && yarn build && wait-on tcp:3000 && electron .",
+    "build:front": "cd WS28xxTwister && yarn build",
+    "electron:build": "yarn build",
+    "electron:builder": "electron-builder",
+    "app:build": "yarn prod:rename && yarn build:front && yarn electron:build && yarn electron:builder",
+    "app:build:nightly": "set APP_IS_NIGHTLY=yes && set APP_IS_DEV=no && yarn nightly:rename && yarn build:front && yarn electron:build && yarn electron:builder",
+    "nightly:rename": "json -I -f package.json -e \"this.name='ws28xxtwister'\" && json -I -f package.json -e \"this.build.productName='WS28xxTwister Nightly'\" && json -I -f package.json -e \"this.build.appId='net.tinic.ws28xxtwister.app'\"",
+    "prod:rename": "json -I -f package.json -e \"this.name='ws28xxtwister'\" && json -I -f package.json -e \"this.build.productName='WS28xxTwister'\" && json -I -f package.json -e \"this.build.appId='net.tinic.ws28xxtwister.app'\"",
+    "electron-rebuild": "./node_modules/.bin/electron-rebuild",
+    "sqlite-rebuild": "cd node_modules/better-sqlite3 && npm run build-release",
+    "postinstall": "electron-builder install-app-deps",
+    "up:win": "up_using_window.cmd"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^4.1.0",
-    "electron": "^23.2.1",
-    "electron-packager": "^17.1.1",
-    "typescript": "^4.9.3",
-    "vite": "^4.2.0",
-    "vue-tsc": "^1.2.0"
+    "concurrently": "^7.6.0",
+    "electron": "^22.0.0",
+    "electron-builder": "^23.6.0",
+    "electron-devtools-installer": "^3.2.0",
+    "json": "^11.0.0",
+    "nodemon": "^2.0.20",
+    "typescript": "^4.9.4",
+    "wait-on": "^7.0.1"
+  },
+  "dependencies": {
+    "electron-log": "^4.4.8",
+    "electron-store": "^8.1.0",
+    "electron-updater": "^5.3.0"
+  },
+  "build": {
+    "appId": "net.tinic.ws28xxtwister.app",
+    "productName": "WS28xxTwister Nightly",
+    "copyright": "Copyright © 2023 ${author}",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "tinic"
+      }
+    ],
+    "nsis": {
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false,
+      "deleteAppDataOnUninstall": true
+    },
+    "files": [
+      "dist/**/*"
+    ],
+    "extraResources": [
+      "defaults/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist_electron"
+    }
   }
 }
