@@ -53,6 +53,7 @@
     "appId": "net.tinic.ws28xxtwister.app",
     "productName": "WS28xxTwister Nightly",
     "copyright": "Copyright © 2023 ${author}",
+    "publish": [],
     "nsis": {
       "oneClick": true,
       "allowToChangeInstallationDirectory": false,
