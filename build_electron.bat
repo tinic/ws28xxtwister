@@ -1,4 +1,4 @@
 cd WS28xxTwister
-npx yarn install
-npx yarn --cwd ./WS28xxTwister/ install
-npx yarn app:build:nightly
+call npx yarn install
+call npx yarn --cwd ./WS28xxTwister/ install
+call npx yarn app:build:nightly
