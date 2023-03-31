@@ -37,7 +37,7 @@ const connectedToDevice = ref(false);
     <h3>WS28xx Twister</h3>
   </div>
   <div class="settings">
-    <ScrollPanel class="scrollpanel">
+    <ScrollPanel class="scrollpanel scrollbar">
       <Panel header="Input LED data format" class="panel">
         <div>
           <SelectButton v-model="rgbInValue" :options="rgbInOptions" aria-labelledby="basic" />
@@ -100,16 +100,27 @@ const connectedToDevice = ref(false);
   </div>
   <Toolbar class="toolbar">
     <template #start>
-      <Button label="Read from Device" icon="pi pi-check" class="mr-2" @click="handleReadButton" :disabled="!connectedToDevice"/>
-      <Button label="Write to Device" icon="pi pi-check" severity="warning" @click="handleWriteButton" class="mr-2" :disabled="!connectedToDevice"/>
+      <Button label="Read from Device" icon="pi pi-check" class="mr-2" :disabled="!connectedToDevice"/>
+      <Button label="Write to Device" icon="pi pi-check" severity="warning" class="mr-2" :disabled="!connectedToDevice"/>
     </template>
     <template #end>
-      <Button label="Quit" icon="pi pi-times" severity="danger" @click="handleQuitButton" class="mr-2"/>
+      <Button label="Quit" icon="pi pi-times" severity="danger" class="mr-2"/>
     </template>
   </Toolbar>
 </template>
 
 <style scoped>
+
+::v-deep(.p-scrollpanel.scrollbar .p-scrollpanel-wrapper) {
+}
+
+::v-deep(.p-scrollpanel.scrollbar .p-scrollpanel-bar) {
+    opacity: 1;
+    transition: background-color 0.3s;
+}
+
+::v-deep(.p-scrollpanel.scrollbar .p-scrollpanel-bar:hover) {
+}
 
 .header {
   position: absolute; 
