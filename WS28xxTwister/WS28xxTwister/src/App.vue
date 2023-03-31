@@ -21,9 +21,13 @@ const swizzleOptionsRGBW = ref(['R', 'G', 'B', 'W']);
 const swizzleOptionsRGB = ref(['R', 'G', 'B']);
 
 const watchDogChecked = ref(false);
+const watchDogColor = ref('FFFFFF');
+const watchDogTimeout = ref(1);
 
 const showRGBWSwizzle = computed(() => rgbInValue.value == 'RGBW 8bit' || 
                                        rgbInValue.value == 'RGBW 16bit');
+
+const connectedToDevice = ref(false);
 
 </script>
 
@@ -33,7 +37,7 @@ const showRGBWSwizzle = computed(() => rgbInValue.value == 'RGBW 8bit' ||
     <h3>WS28xx Twister</h3>
   </div>
   <div class="settings">
-    <ScrollPanel class="scrollpanel" >
+    <ScrollPanel class="scrollpanel">
       <Panel header="Input LED data format" class="panel">
         <div>
           <SelectButton v-model="rgbInValue" :options="rgbInOptions" aria-labelledby="basic" />
@@ -51,9 +55,11 @@ const showRGBWSwizzle = computed(() => rgbInValue.value == 'RGBW 8bit' ||
         <template #icons>
           <InputSwitch v-model="skipLEDChecked" />
         </template>
-        <div class="flex-auto">
-          <label for="locale-us" class="font-bold mb-2">Number of LEDs to skip</label>
-          <InputNumber v-model="skipLEDValue" inputId="minmax" :min="0" :max="9999" />
+        <div class="flex flex-column align-items-center gap-3">
+          <div class="p-inputgroup w-full md:w-20rem">
+            <span class="p-inputgroup-addon">Number of LEDs to skip</span>
+            <InputNumber v-model="skipLEDValue" inputId="minmax" :min="0" :max="9999" />
+          </div>
         </div>
       </Panel>
       <Panel header="Swizzle input LED colors" :collapsed="!swizzleLEDComponentsChecked" class="panel">
@@ -76,25 +82,34 @@ const showRGBWSwizzle = computed(() => rgbInValue.value == 'RGBW 8bit' ||
         <template #icons>
           <InputSwitch v-model="watchDogChecked" />
         </template>
+        <div class="flex flex-column align-items-center gap-3">
+          <div class="p-inputgroup w-full md:w-15rem">
+            <span class="p-inputgroup-addon">Timeout</span>
+            <InputNumber v-model="watchDogTimeout" inputId="minmax" :min="1" :max="9999" />
+            <span class="p-inputgroup-addon">s</span>
+          </div>
+          <ColorPicker v-model="watchDogColor" id="colorPicker" inline />
+          <div class="flex align-items-center gap-3">
+            <ColorPicker v-model="watchDogColor" id="colorPicker" />
+            <InputText v-model="watchDogColor" id="colorInput"></InputText>
+          </div>
+        </div>
       </Panel>
       <div class="space"/>
     </ScrollPanel>
   </div>
   <Toolbar class="toolbar">
     <template #start>
-      <Button label="Save" icon="pi pi-check" severity="warning" />
+      <Button label="Read from Device" icon="pi pi-check" class="mr-2" @click="handleReadButton" :disabled="!connectedToDevice"/>
+      <Button label="Write to Device" icon="pi pi-check" severity="warning" @click="handleWriteButton" class="mr-2" :disabled="!connectedToDevice"/>
     </template>
     <template #end>
-      <Button label="Quit" icon="pi pi-times" severity="danger" />
+      <Button label="Quit" icon="pi pi-times" severity="danger" @click="handleQuitButton" class="mr-2"/>
     </template>
   </Toolbar>
 </template>
 
 <style scoped>
-
-label {
-    padding-right:8px;
-}
 
 .header {
   position: absolute; 
