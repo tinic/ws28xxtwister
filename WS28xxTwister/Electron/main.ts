@@ -8,9 +8,9 @@ async function createWindow() {
     const { width, height } = screen.getPrimaryDisplay().workAreaSize;
     const appBounds: any = appConfig.get("setting.appBounds");
     const BrowserWindowOptions: BrowserWindowConstructorOptions = {
-        width: 1200,
-        minWidth: 900,
-        height: 750,
+        width: 640,
+        minWidth: 640,
+        height: 600,
         minHeight: 600,
 
         webPreferences: {
