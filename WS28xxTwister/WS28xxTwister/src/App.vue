@@ -1,6 +1,8 @@
 <script setup lang="ts">
 
-import { ref, computed } from 'vue';
+import internal from 'stream';
+import { ref, computed, initCustomFormatter } from 'vue';
+import { Settings } from './settings';
 
 const rgbInValue = ref('RGB 8bit');
 const rgbInOptions = ref(['RGB 8bit', 'RGBW 8bit', 'RGB 16bit', 'RGBW 16bit']);
@@ -28,6 +30,56 @@ const showRGBWSwizzle = computed(() => rgbInValue.value == 'RGBW 8bit' ||
                                        rgbInValue.value == 'RGBW 16bit');
 
 const connectedToDevice = ref(false);
+
+function toHex(num: number): string {
+    const map = "0123456789abcdef";
+    let hex = num === 0 ? "0" : "";
+    while (num !== 0) {
+        hex = map[num & 15] + hex;
+        num = num >>> 4;
+    }
+    return hex;
+}
+
+function copyToSettings(settings:Settings) {
+  settings.inFormat = rgbInOptions.value.indexOf(rgbInValue.value);
+  
+  settings.outConvert = rgbOutChecked.value;
+  settings.outFormat = rgbOutOptions.value.indexOf(rgbOutValue.value);
+
+  settings.skip = skipLEDChecked.value;
+  settings.skipN = skipLEDValue.value;
+
+  settings.swizzle = swizzleLEDComponentsChecked.value;
+  settings.swizzle0 = swizzleOptionsRGBW.value.indexOf(swizzle1Select.value);
+  settings.swizzle1 = swizzleOptionsRGBW.value.indexOf(swizzle2Select.value);
+  settings.swizzle2 = swizzleOptionsRGBW.value.indexOf(swizzle3Select.value);
+  settings.swizzle3 = swizzleOptionsRGBW.value.indexOf(swizzle4Select.value);
+
+  settings.watchdog = watchDogChecked.value;
+  settings.watchdogTimeout = watchDogTimeout.value;
+  settings.watchdogColor = parseInt(watchDogColor.value, 16);
+}
+
+function copyFromSettings(settings:Settings) {
+  rgbInValue.value = rgbInOptions.value[settings.inFormat];
+
+  rgbOutChecked.value = settings.outConvert;
+  rgbOutValue.value = rgbOutOptions.value[settings.outFormat];
+
+  skipLEDChecked.value = settings.skip;
+  skipLEDValue.value = settings.skipN;
+
+  swizzleLEDComponentsChecked.value = settings.swizzle;
+  swizzle1Select.value = swizzleOptionsRGBW.value[settings.swizzle0];
+  swizzle2Select.value = swizzleOptionsRGBW.value[settings.swizzle1];
+  swizzle3Select.value = swizzleOptionsRGBW.value[settings.swizzle2];
+  swizzle4Select.value = swizzleOptionsRGBW.value[settings.swizzle3];
+
+  watchDogChecked.value = settings.watchdog;
+  watchDogColor.value = toHex(settings.watchdogColor);
+  watchDogTimeout.value = settings.watchdogTimeout;
+}
 
 </script>
 
@@ -111,15 +163,9 @@ const connectedToDevice = ref(false);
 
 <style scoped>
 
-::v-deep(.p-scrollpanel.scrollbar .p-scrollpanel-wrapper) {
-}
-
 ::v-deep(.p-scrollpanel.scrollbar .p-scrollpanel-bar) {
     opacity: 1;
     transition: background-color 0.3s;
-}
-
-::v-deep(.p-scrollpanel.scrollbar .p-scrollpanel-bar:hover) {
 }
 
 .header {
