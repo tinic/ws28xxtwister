@@ -1,4 +1,4 @@
 {
-    "watch": ["Electron/*"],
-    "ext": "js,css,ts,json"
+    "watch": ["Electron/*", "WS28xxTwister/*", "WS28xxTwister/*/*"],
+    "ext": "js,css,ts,json,vue"
 }

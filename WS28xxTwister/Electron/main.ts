@@ -1,4 +1,4 @@
-import { app, BrowserWindow, BrowserWindowConstructorOptions, ipcMain, screen } from "electron";
+import { app, BrowserWindow, BrowserWindowConstructorOptions, Menu, ipcMain, screen } from "electron";
 import path from "path";
 import { isDev } from "./config";
 import { appConfig } from "./ElectronStore/Configuration";
@@ -8,10 +8,10 @@ async function createWindow() {
     const { width, height } = screen.getPrimaryDisplay().workAreaSize;
     const appBounds: any = appConfig.get("setting.appBounds");
     const BrowserWindowOptions: BrowserWindowConstructorOptions = {
-        width: 1200,
-        minWidth: 900,
-        height: 750,
-        minHeight: 600,
+        width: 550,
+        minWidth: 550,
+        height: 800,
+        minHeight: 800,
 
         webPreferences: {
             preload: __dirname + "/preload.js",
@@ -28,12 +28,16 @@ async function createWindow() {
     // auto updated
     if (!isDev) AppUpdater();
 
+    // Remove menu bar
+    mainWindow.removeMenu();
+
     // and load the index.html of the app.
     // win.loadFile("index.html");
     await mainWindow.loadURL(isDev ? "http://localhost:3000" : `file://${path.join(__dirname, "./index.html")}`);
-
+ 
     if (appBounds !== undefined && appBounds !== null && appBounds.width > width && appBounds.height > height) mainWindow.maximize();
     else mainWindow.show();
+
 
     // this will turn off always on top after opening the application
     setTimeout(() => {
@@ -44,7 +48,6 @@ async function createWindow() {
     if (isDev) {
         mainWindow.webContents.openDevTools();
     }
-
 
     ipcMain.handle('versions', () => {
         return {

@@ -17,7 +17,7 @@
     "electron:setup": "yarn",
     "setup": "yarn front:setup && yarn electron:setup",
     "serve:front": "cd WS28xxTwister && yarn dev",
-    "serve:electron": "set APP_IS_NIGHTLY=yes && set APP_IS_DEV=yes && yarn build && wait-on tcp:3000 && electron .",
+    "serve:electron": "set APP_IS_NIGHTLY=yes && set APP_IS_DEV=yes && yarn build:front && yarn build && wait-on tcp:3000 && electron .",
     "build:front": "cd WS28xxTwister && yarn build",
     "electron:build": "yarn build",
     "electron:builder": "electron-builder --publish never",
