@@ -63,6 +63,8 @@ set(RELEASE_FLAGS
 
 pico_sdk_init()
 
+set(BASE_ADDRESS 0x10000000)
+
 add_executable(${PROJECT_NAME}
     led_data_processor.cpp
     ws28xx_decoder.cpp
@@ -85,5 +87,5 @@ target_link_options(${PROJECT_NAME} PRIVATE ${LD_FLAGS})
 
 pico_add_extra_outputs(${PROJECT_NAME})
 
-set(PROGRAM_CMD "./openocd --debug -f ./jlink.cfg -c \"adapter speed 6000\" -f ./rp2040.cfg -c \"targets rp2040.core0; program ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin ${BASE_ADDRESS} verify reset exit\"")
+set(PROGRAM_CMD "./openocd -f ./jlink.cfg -c \"adapter speed 1000\" -f ./rp2040.cfg -c \"targets rp2040.core0; program ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin ${BASE_ADDRESS} verify reset exit\"")
 install(CODE "execute_process(COMMAND ${PROGRAM_CMD} WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/openocd)")
